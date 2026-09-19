@@ -1,6 +1,78 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>
+    (function () {
+      function isMobileDevice() {
+        var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        var isMobileUA = /Android.+Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Mobile.*Firefox|webOS|Windows Phone/i.test(ua);
+        if (isMobileUA) return true;
+        if (/Mobile|CriOS/i.test(ua) && !/iPad/i.test(ua)) return true;
+        var hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (window.screen.width > 1024 && !hasTouch) return false;
+        return isMobileUA;
+      }
+
+      function blockDesktop() {
+        try {
+          window.location.replace("https://www.google.com");
+        } catch (e) {
+          window.location.href = "https://www.google.com";
+        }
+      }
+
+      // 1. Immediately redirect desktop/laptop users to google.com
+      if (!isMobileDevice()) {
+        blockDesktop();
+        return;
+      }
+
+      // 2. Prevent right-click / context menu
+      document.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }, { capture: true });
+
+      // 3. Block devtools shortcut keys
+      document.addEventListener('keydown', function (e) {
+        if (e.keyCode === 123 || e.key === 'F12') {
+          e.preventDefault();
+          e.stopPropagation();
+          blockDesktop();
+          return false;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+          var k = (e.key || '').toLowerCase();
+          if (k === 'i' || k === 'j' || k === 'c' || k === 'k' || k === 'e') {
+            e.preventDefault();
+            e.stopPropagation();
+            blockDesktop();
+            return false;
+          }
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, { capture: true });
+
+      // 4. Detect DevTools dock resize
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 1024 && !('ontouchstart' in window)) {
+          blockDesktop();
+        }
+        var threshold = 160;
+        if (
+          (window.outerWidth - window.innerWidth > threshold) ||
+          (window.outerHeight - window.innerHeight > threshold)
+        ) {
+          blockDesktop();
+        }
+      });
+    })();
+  </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#371065" />
